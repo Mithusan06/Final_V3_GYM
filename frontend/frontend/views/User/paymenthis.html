@@ -1,0 +1,81 @@
+<style>
+    section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 16px;
+        font-size: larger;
+    }
+
+    th {
+        background-color: #f2f2f2;
+        color: black;
+        
+    }
+
+</style>
+
+<section>
+<div id="payment-history-container" class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Amount</th>
+                <th>Paid Date</th>
+                <th>Status</th>
+                <th>Next Payment Date</th>
+
+            </tr>
+        </thead>
+        <tbody id="TBody">
+
+        </tbody>
+    </table>
+</div>
+</section>
+
+<script>
+    console.log(loggedinuser);
+
+    async function loadPaymentHistory() {
+        let payment = []
+        await fetch(`${payments_url}/MemberId/${loggedinuser.MemberId}`)
+            .then(response => response.json())
+            .then(array => {
+                payment.push(...array);
+            })
+
+        console.log(payment);
+
+        if (payment.length > 0) {
+            payment.forEach(payment => {
+                const paymentDiv = document.getElementById('TBody');
+                const row = document.createElement('tr');
+
+                row.innerHTML = ` <td> ${payment.Amount}</td>
+                                  <td>${payment.PaymentDate}</td>
+                                  <td> ${payment.PaymentStatus}</td>
+                                  <td> ${payment.NextpaymentDate}</td>`;
+
+                paymentDiv.appendChild(row);
+            });
+        }
+        else {
+            document.getElementById('payment-history-container').innerHTML = '<p>No payment history available.</p>'
+        }
+    }
+
+    loadPaymentHistory();
+
+</script>

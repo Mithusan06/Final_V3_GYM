@@ -1,0 +1,148 @@
+<style>
+    section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    #formMessage {
+        text-align: center;
+        color: rgb(164, 24, 24);
+        font-size: larger;
+        font-weight: 800;
+    }
+</style>
+
+<section>
+    <div class="container">
+        <h1 class="heading"> Payment</h1>
+        <form id="paymentForm">
+            <div class="form-group">
+                <label for="username">Username :</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount to Pay:</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" required>
+            </div>
+
+            <div class="form-group">
+                <label for="PaymentType">Payment Type:</label>
+                <select id="paymentType" name="PaymentType" required>
+                    <option value="Monthly">Monthly</option>
+                    <option value="ThreeMonth">3 Months</option>
+                    <option value="SixMonth">6 Months </option>
+                    <option value="Annual">Annual </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="PaymentMethod">Payment Method:</label>
+                <select id="paymentMethod" name="PaymentMethod" required>
+                    <option value="Cash">Cash Payment</option>
+                    <option value="Card">Online Transaction</option>
+                </select>
+            </div>
+
+            <div id="onlinePaymentFields" class="hidden">
+                <div class="form-group">
+                    <label for="receipt">Upload Receipt:</label>
+                    <input type="file" id="receipt" name="receipt" accept=".jpg,.jpeg,.png,.pdf">
+                </div>
+            </div>
+
+            <button type="submit" class="btn">Submit Payment</button>
+            <p id="formMessage"></p>
+        </form>
+    </div>
+</section>
+
+<script>
+
+    document.getElementById("paymentForm").addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const message = document.getElementById("formMessage");
+        const username = document.getElementById('username').value;
+
+        const amount = document.getElementById('amount').value;
+        const paymentMethod = document.getElementById('paymentMethod').value;
+        const paymentType = document.getElementById('paymentType').value;
+        const today = new Date(); // Get today's date
+        const nextpaymentdate = new Date();
+        let member = [];
+
+        try {
+            await fetch(`${members_url}/${username}`).then(response => response.json())
+                .then(array => {
+                    member = array;
+                })
+            if (!member) {
+                alert("Invalid username");
+                return;
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+        console.log(member)
+
+        if (paymentType == "Monthly") {
+            nextpaymentdate.setMonth(today.getMonth() + 1);
+        }
+        else if (paymentType == "ThreeMonth") {
+            nextpaymentdate.setMonth(today.getMonth() + 3);
+        } else if (paymentType == "SixMonth") {
+            nextpaymentdate.setMonth(today.getMonth() + 6);
+        } else {
+            nextpaymentdate.setFullYear(today.getFullYear() + 1);
+        }
+
+        let mebpayment = [];
+        await fetch(`${payments_url}/status/Pending`)
+            .then(response => response.json())
+            .then(array => {
+                mebpayment.push(...array);
+            })
+        console.log(mebpayment);
+
+        const payarr = mebpayment.find(data => data.MemberId == member.MemberId);
+
+        if (payarr) {
+            payarr.PaymentStatus = "Paid";
+            payarr.NextpaymentDate = today.toDateString();
+            console.log(payarr);
+            put_api(payments_url, payarr.PaymentId, payarr);
+
+            const payment = {
+                MemberId: member.MemberId,
+                Amount: amount,
+                PaymentMethod: paymentMethod,
+                PaymentType: paymentType,
+                PaymentDate: today.toDateString(),
+                NextpaymentDate: nextpaymentdate.toDateString()
+            };
+            console.log(payment);
+            post_api(payments_url, payment);
+            alert("Payment is successful")
+        }
+        else {
+            message.textContent = "invalid request";
+        }
+       location.reload();
+    });
+</script>

@@ -1,0 +1,224 @@
+<style>
+    section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+    }
+
+    td input:disabled {
+        background-color: transparent;
+        border: none;
+    }
+
+    button {
+        border-radius: 5px;
+        color: white;
+        padding: 8px 16px;
+        margin: 0px 8px;
+        cursor: pointer;
+        border: none;
+    }
+
+    td button.edit {
+        background-color: #4CAF50;
+    }
+
+    td button.edit:hover {
+        background-color: #45a049;
+    }
+
+    td button.delete {
+        background-color: #f44336;
+    }
+
+    td button.delete:hover {
+        background-color: #e31e10;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .membid {
+        text-align: center;
+        padding: 10px;
+    }
+
+    th {
+        padding: 10px;
+        background-color: #f2f2f2;
+        font-size: larger;
+    }
+
+    .btn_td {
+        display: flex;
+        padding: 10px;
+    }
+
+    .table-container {
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .search-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #searchInput {
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px 0 0 4px;
+        width: 200px;
+        outline: none;
+    }
+
+    #searchButton {
+        padding: 8px 12px;
+        font-size: 14px;
+        color: #fff;
+        background-color: #4CAF50;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    #searchButton:hover {
+        background-color: #45a049;
+    }
+</style>
+
+
+<div class="table-container">
+    <table id="datatable">
+        <thead>
+            <tr>
+                <th colspan="7">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search by UserName" />
+                        <button id="searchButton" onclick="genere()">Search</button>
+                    </div>
+                </th>
+                <tbody id="Mem">
+
+                </tbody>
+            </tr>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Contact</th>
+                <th>NIC-Number</th>
+                <th>UserName</th>
+                <th>Image</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tbody">
+        </tbody>
+    </table>
+</div>
+</section>
+
+<script>
+
+    async function genetable() {
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = '';
+
+        await fetch(members_url)
+            .then(response => response.json())
+            .then(array => {
+                members.push(...array);
+            })
+        console.log(members);
+
+        members.forEach((member, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+            <td class="membid">${member.MemberId}</td>
+            <td>${member.FullName}</td>
+            <td><input type="text" value="${member.phoneNumber}" disabled /></td>
+            <td><input type="text" value="${member.NicNumber}" disabled /></td>
+            <td><input type="text" value="${member.UserName}" disabled /></td>
+            <td> <img src="http://localhost:5143/Resources/${member.Memberimg}" alt="img" style="height:80px; width:80px">
+               
+            <td class="btn_td">
+                <button class="edit" onclick="editRow('${index}', this)">Edit</button>
+                <button class="delete" onclick="deleteRow('${member.MemberId}')">Delete</button>
+            </td>`;
+            tbody.appendChild(row);
+        });
+    }
+
+    genetable();
+
+    function editRow(index, button) {
+        const row = button.parentElement.parentElement;
+        const inputs = row.querySelectorAll('input');
+
+        if (button.textContent === 'Edit') {
+            inputs.forEach(input => input.disabled = false);
+            button.textContent = 'Save';
+            button.style.backgroundColor = '#4CAF50'
+        }
+        else {
+            inputs.forEach(input => input.disabled = true);
+            button.textContent = 'Edit';
+            button.style.backgroundColor = '#008CBA';
+          
+            members[index].phoneNumber = inputs[0].value;
+            members[index].NicNumber = inputs[1].value;
+            members[index].UserName = inputs[2].value;
+            console.log(members[index]);
+            put_api(members_url, members[index].MemberId, members[index]);
+            alert("Member details edited successfully ")
+            location.reload();
+        }
+    }
+    
+        async function genere() {
+        const username = document.getElementById('searchInput').value;
+
+     
+        const response = await fetch(`${members_url}/${username}`);
+        
+        if (response.ok) {
+            const user = await response.json();
+
+            
+            const memTable = document.getElementById('Mem');
+            memTable.innerHTML = '';
+
+           
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="membid">${user.MemberId}</td>
+                <td>${user.FullName}</td>
+                <td><input type="text" value="${user.phoneNumber}" disabled /></td>
+                <td><input type="text" value="${user.NicNumber}" disabled /></td>
+                <td><input type="text" value="${user.UserName}" disabled /></td>
+                <td><img src="http://localhost:5143/Resources/${user.Memberimg}" alt="img" style="height:80px; width:80px"></td>
+            `;
+
+            
+            memTable.appendChild(row);
+        } else {
+            alert("User not found");
+        }
+    }
+    function deleteRow(id) {
+        console.log(id);
+        delete_api(members_url, id);
+        location.reload();
+    }
+
+</script>

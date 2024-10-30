@@ -1,0 +1,80 @@
+<style>
+    header {
+     background-color: #0a0a0a;
+     color: white;
+     padding: 10px;
+     text-align: center;
+ }
+
+ .container {
+     width: 80%;
+     margin: 25px auto;
+    margin-top: 80px;
+ }
+
+  .overdue {
+     color: rgb(216, 21, 21);
+     font-weight: bold;
+     font-size: larger;
+ }
+
+ .panel ul {
+     list-style-type: none;
+     padding: 0;
+ }
+
+ .panel li {
+     padding: 20px;
+     margin: 15px;
+     background-color: rgb(24, 22, 22);
+ }
+</style>
+
+<section>
+ <div class="container">
+     <div class="panel">
+         <h2 class="heading">Payment Alerts</h2>
+         <ul id="overdueList"></ul>
+     </div>
+ </div>
+</section>
+
+<script>
+ async function showOverdueMembers() {
+     const overdueList = document.getElementById("overdueList");
+     overdueList.innerHTML = "";
+
+     let overdue_payments = [];
+
+     await fetch(`${payments_url}/status/Overdue`)
+         .then(response => response.json())
+         .then(array => {
+             overdue_payments.push(...array);
+         })
+
+     console.log(overdue_payments);
+
+     if (!overdue_payments) {
+         const listItem = document.createElement("li");
+         listItem.textContent = "No overdue members.";
+         overdueList.appendChild(listItem);
+     }
+     else {
+         overdue_payments.forEach(async payment => {
+
+             // const member = await fetch(`${members_url}/${payment.memberId}`)
+             // .then(response => response.json())
+             // console.log(member);
+
+             const listItem = document.createElement("li");
+             listItem.innerHTML = `Member ${payment.MemberId} 's payment is overdue! <br>
+              Due date is  ${payment.NextpaymentDate}.`;
+             listItem.classList.add("overdue");
+             overdueList.appendChild(listItem);
+         });
+     }
+ }
+
+ showOverdueMembers();
+ 
+</script>

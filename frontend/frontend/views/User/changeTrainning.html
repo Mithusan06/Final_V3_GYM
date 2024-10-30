@@ -1,0 +1,146 @@
+<style>
+    section {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .container label,
+    .ckbox p {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .wid {
+        width: 11rem;
+    }
+
+    .ckbox label {
+        display: block;
+        width: 100%;
+        font-weight: 500;
+    }
+
+    .ckbox input {
+        width: 30%;
+    }
+
+    label {
+        font-size: 20px;
+        color: rgb(20, 20, 19);
+    }
+
+    input,
+    select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #0f0e0e;
+        border-radius: 4px;
+    }
+    /* input[type="checkbox"]:checked{
+                color: #f44336;
+        background-color: #f44336;
+    } */
+</style>
+
+<section>
+    <div id="trainingProgramPage" class="container">
+        <h1 class="heading">Select Training Program</h1>
+        <form id="trainingForm">
+
+            <div class="form-group wid ckbox">
+                <p style="color:#0e0d0d;">Cardio:</p>
+                <label><input type="checkbox" name="cardio" value="Running" /> Running</label>
+                <label><input type="checkbox" name="cardio" value="Cycling" /> Cycling</label>
+                <label><input type="checkbox" name="cardio" value="Aerobic" /> Aerobic</label>
+            </div>
+
+            <div class="form-group wid ckbox">
+                <p style="color: #1b1a1a;">Weight Training:</p>
+                <label><input type="checkbox" name="weighttraining" value="Lifting" /> Lifting</label>
+                <label><input type="checkbox" name="weighttraining" value="Body Building" /> Body
+                    Building</label>
+                <label><input type="checkbox" name="weighttraining" value="Strength Training" /> Strength
+                    Training</label>
+            </div>
+
+            <button type="button" id="edit-btn" class="btn">change</button>
+            <button type="button" id="save-btn" class="btn" style="display: none;">Send request to change</button>
+        </form>
+    </div>
+</section>
+
+<script>
+    let userProgram = [];
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+       async function loadTrainingProgram() {
+        await fetch(`${trainingPrograms_url}/MemberId/${loggedinuser.MemberId}`)
+            .then(response => response.json())
+            .then(array => {
+                userProgram=array;
+            })
+        // userProgram = trainingPrograms.find(x=>x.MemberId==loggedinuser.MemberId);
+        console.log(userProgram);
+
+        checkboxes.forEach(checkbox => checkbox.disabled = true);
+        if (userProgram) {
+            userProgram.Cardio.forEach(program => {
+                document.querySelector(`input[name="cardio"][value="${program}"]`).checked = true;
+            });
+
+            userProgram.Weighttraining.forEach(program => {
+                document.querySelector(`input[name="weighttraining"][value="${program}"]`).checked = true;
+            });
+        }
+        else {
+            alert('Training program not found.');
+        }
+        document.getElementById('save-btn').style.display = 'none';
+        document.getElementById('edit-btn').style.display = 'block';
+    }
+
+    loadTrainingProgram();
+    
+    document.getElementById('edit-btn').addEventListener('click', function () {
+        checkboxes.forEach(checkbox => checkbox.disabled = false);
+        document.getElementById('edit-btn').style.display = 'none';
+        document.getElementById('save-btn').style.display = 'block';
+    });
+    
+    document.getElementById('save-btn').addEventListener('click', function () {
+        const selectedCardio = [];
+        const selectedWeightTraining = [];
+
+        document.querySelectorAll('input[name="cardio"]:checked').forEach(checkbox => {
+            selectedCardio.push(checkbox.value);
+        });
+
+        document.querySelectorAll('input[name="weighttraining"]:checked').forEach(checkbox => {
+            selectedWeightTraining.push(checkbox.value);
+        });
+
+        // Store change training program data
+        const changetraining = { TrainingId: userProgram.TrainingId, MemberId: userProgram.MemberId, Cardio: selectedCardio, Weighttraining: selectedWeightTraining };
+        console.log(changetraining);
+
+        post_api(pendingProgramEdits_url,changetraining);//try but issue
+        alert('Your request to change Training program sent successfully.');
+        loadTrainingProgram();
+    });
+
+</script>

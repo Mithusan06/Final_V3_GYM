@@ -1,0 +1,212 @@
+<style>
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    button {
+        padding: 8px 16px;
+        margin: 5px;
+        cursor: pointer;
+    }
+
+    .approve-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+    }
+
+    .reject-btn {
+        background-color: #f44336;
+        color: white;
+        border: none;
+    }
+
+    h1 {
+        margin: 20px;
+    }
+
+    .table-container {
+        display: flex;
+       flex-direction: row;
+       justify-content: center;
+       align-items: center;
+       width: 100%;
+
+    }
+
+    table {
+        width:80%;
+        background-color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 50px;
+    }
+   
+</style>
+
+<section>
+    <div id="memberRequestcard">
+    <h1>Pending Member Requests</h1>
+    <div id="profile" class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Member ID</th>
+                    <th>Full Name</th>
+                    <th>Phone Number</th>
+                    <th>NIC Number</th>
+                    <th>Username</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="request-list">
+                <!-- Requests will be populated here via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <h1>Pending Training Requests</h1>
+    <div id="training" class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Member ID</th>
+                    <th>Cardio</th>
+                    <th>Weight Training</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="training-list">
+                <!-- Requests will be populated here via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+</section>
+
+<script>
+    let pendingEdits = [];
+    let pendingProgramEdits = [];
+
+    // Load all pending member requests
+    async function loadPendingRequests() {
+        const requestList = document.getElementById('request-list');
+        requestList.innerHTML = ''; // Clear the table first
+        pendingEdits = [];
+        await fetch(pendingEdits_url)
+            .then(response => response.json())
+            .then(array => {
+                pendingEdits.push(...array);
+            })
+        console.log(pendingEdits);
+
+        if (pendingEdits.length == 0) {
+            document.getElementById('profile').innerHTML = `No profile change requests`;
+        }
+        else {
+            pendingEdits.forEach((edit, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                                <td>${edit.MemberId}</td>
+                                <td>${edit.FullName}</td>
+                                <td>${edit.phoneNumber}</td>
+                                <td>${edit.NicNumber}</td>
+                                <td>${edit.UserName}</td>
+                                <td>
+                                    <button class="approve-btn" onclick="approveRequest(${index})">Approve</button>
+                                    <button class="reject-btn" onclick="rejectRequest(${index})">Reject</button>
+                                </td> `;
+                requestList.appendChild(row);
+            });
+        }
+    }
+
+    loadPendingRequests();
+
+    // Approve request
+    async function approveRequest(index) {
+        let memberdata = await fetch(`${members_url}/${pendingEdits[index].UserName}`);
+        let member = await memberdata.json();
+
+        member.phoneNumber = pendingEdits[index].phoneNumber;
+        member.NicNumber = pendingEdits[index].NicNumber;
+        console.log(member);
+
+        const notification = { Memberid: pendingEdits[index].MemberId, N_Status: 'approved', N_Type: 'profile' };
+        put_api(members_url, member.MemberId, member);//to change the member details
+        post_api(notifications_url, notification);//send notification 
+        delete_api(pendingEdits_url, pendingEdits[index].PendingeditId)//to delete the reequest
+        loadPendingRequests();
+    }
+
+    // Reject request
+    function rejectRequest(index) {
+        const notification = { Memberid: pendingEdits[index].MemberId, N_Status: 'rejected', N_Type: 'profile' };//send notification 
+        post_api(notifications_url, notification);//send notification 
+        delete_api(pendingEdits_url, pendingEdits[index].PendingeditId)//to delete the reequest
+        loadPendingRequests();
+    }
+
+    async function loadTrainingProgram() {
+        const requestList = document.getElementById('training-list');
+        requestList.innerHTML = ''; // Clear the table first
+
+        pendingProgramEdits = [];
+        await fetch(pendingProgramEdits_url)
+            .then(response => response.json())
+            .then(array => {
+                pendingProgramEdits.push(...array);
+            })
+        console.log(pendingProgramEdits);
+
+        if (pendingProgramEdits == 0) {
+            document.getElementById('training').innerHTML = `No training change requests`;
+        }
+        else {
+            pendingProgramEdits.forEach((edit, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${edit.PendingprogramId}</td>
+                                <td>${edit.MemberId}</td>
+                                <td>${edit.Cardio}</td>
+                                <td>${edit.Weighttraining}</td>
+                                <td>
+                                    <button class="approve-btn" onclick="approvetrainRequest('${index}')">Approve</button>
+                                    <button class="reject-btn" onclick="rejecttrainRequest('${index}')">Reject</button>
+                                </td> `;
+                requestList.appendChild(row);
+            });
+        }
+    }
+
+    loadTrainingProgram();
+
+    async function approvetrainRequest(index) {
+        console.log(pendingProgramEdits[index]);
+        const notification = { MemberId: pendingProgramEdits[index].MemberId, N_Status: 'approved', N_Type: 'Training' };//send notification 
+
+        let traindata = await fetch(`${trainingPrograms_url}/${pendingProgramEdits[index].TrainingId}`);
+        let training = await traindata.json();
+        training.cardio = pendingProgramEdits[index].Cardio;
+        training.weighttraining = pendingProgramEdits[index].Weighttraining;
+        console.log(training);
+
+        put_api(trainingPrograms_url, pendingProgramEdits[index].TrainingId, training);//to change the training details
+        post_api(notifications_url, notification);//send notification 
+        delete_api(pendingProgramEdits_url, pendingProgramEdits[index].PendingprogramId)//to delete the reequest
+        loadTrainingProgram();
+    }
+
+    function rejecttrainRequest(index) {
+        const notification = { MemberId: pendingProgramEdits[index].MemberId, N_Status: 'rejected', N_Type: 'Training' };//send notification 
+        post_api(notifications_url, notification);//send notification 
+        delete_api(pendingProgramEdits_url, pendingProgramEdits[index].PendingprogramId)//to delete the reequest
+         loadTrainingProgram();
+    }
+
+</script>

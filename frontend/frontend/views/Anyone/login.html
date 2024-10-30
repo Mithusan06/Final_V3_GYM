@@ -1,0 +1,145 @@
+<style>
+    main {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: url('/static/images/bg.jpg') no-repeat center center/cover;
+    }
+
+    .login-container {
+        position: relative;
+        background-color: rgba(0, 0, 0, 0.6);
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .login-box {
+        background-color: rgba(255, 255, 255, 0.397);
+        padding: 40px;
+        border-radius: 10px;
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .login-box h2 {
+        font-size: 24px;
+        margin-bottom: 30px;
+    }
+
+    .login-box label {
+        display: block;
+        text-align: left;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+
+    .login-box input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .remember-me label {
+        font-size: 14px;
+    }
+
+    .login-btn {
+        background-color: #ff6600;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        /* width: 100%; */
+        font-size: 16px;
+        margin-right: 500px;
+    }
+
+    .login-btn:hover {
+        background-color: #e65c00;
+    }
+
+    .login-links {
+        margin-top: 20px;
+        font-size: 14px;
+    }
+
+    .login-links a {
+        color: #ff6600;
+        text-decoration: none;
+    }
+
+    .login-links a:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<main>
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Login-Here</h2>
+            <form id="login">
+                <label for="username">Username </label>
+                <input type="text" id="username" placeholder="Enter your username " required>
+
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+                <button type="submit" class="login-btn">Log In</button>
+                <p></p>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+
+    function encryptPassword(password) {
+        return btoa(password);
+    }
+
+    document.getElementById('login').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password =encryptPassword( document.getElementById('password').value);
+        console.log(password)
+
+        const userdata = await fetch(`${members_url}/${username}/${password}`)
+        const user = await userdata.json();
+        console.log(user)
+        console.log(user);
+        if (user) {
+            const loggedinuser = user
+            console.log(loggedinuser);
+            
+
+            localStorage.setItem('loggedinuser', JSON.stringify(loggedinuser));
+
+            if (user.Userole == "member") {
+                window.location.href = '/profile';
+            }
+            else if (user.Userole == "admin") {
+                window.location.href = '/Create_User';
+            }
+        }
+        else {
+
+        }
+    });
+
+</script>

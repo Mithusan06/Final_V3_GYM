@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.0/css/font-awesome.css"
+        integrity="sha512-72McA95q/YhjwmWFMGe8RI3aZIMCTJWPBbV8iQY3jy1z9+bi6+jHnERuNrDPo/WGYEzzNs4WdHNyyEr/yXJ9pA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    {{style}}
+
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-image: url("/static/images/bg.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: rgba(3, 0, 3, 0.975);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav li {
+            margin: 0px 25px;
+            display: block;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .logo {
+            border-radius: 50%;
+            height: 3rem;
+            width: 3rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: white;
+            font-size: 20px;
+            font-weight: 800;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .login-btn {
+            background-color: #ff6600;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0px 40px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #222;
+            color: white;
+            padding: 20px ;
+            text-align: center;
+            position: fixed;
+            bottom: 0px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            height: 10vh;
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        .footer-logo h2 {
+          color: aliceblue;
+            font-size: 2rem;
+        }
+
+        .social-icons a {
+            color: #ff6600;
+            font-size: x-large;
+            margin: 5px;
+        }
+        .footer-text p{
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div>
+            <img src="/static/images/logo2.avif" alt="logo" class="logo">
+        </div>
+        <ul>
+            <li><a href="/">HOME</a></li>
+            <li><a href="/training">PROGRAMS</a></li>
+            <li><a href="/about">ABOUTUS</a></li>
+            <li><a href="/calculate">CALCULATE BMI</a></li>
+            <li id="dashboard_li"><a href="/profile">DASHBOARD</a></li>
+        </ul>
+        <div>
+            <a href="/login" class="login-btn" id="login_btn">LOGIN</a>
+            <button class="login-btn" id="logout_btn" onclick="logout()">LOGOUT</button>
+        </div>
+    </nav>
+
+    {{content}}
+
+    <footer>
+        <div class="footer-logo">
+            <h2>POWER GYM</h2>
+        </div>
+        <div class="social-icons">
+            <a href="#" target="_blank"><i class="fa fa-facebook"></i></a>
+            <a href="#" target="_blank"><i class="fa fa-twitter"></i></a>
+            <a href="#" target="_blank"><i class="fa fa-instagram"></i></a>
+            <a href="#" target="_blank"><i class="fa fa-youtube"></i></a>
+        </div>
+        <div class="footer-text">
+            <p>&copy; 2024 Power Gym. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const members_url = "http://localhost:5143/api/Member";
+        async function post_api(url, arr) {
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(arr)
+                });
+                if (response) {
+                    console.log(response);
+                }
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function delete_api(url, id) {
+            try {
+                const response = await fetch(`${url}/${id}`, {
+                    method: "DELETE"
+                });
+                if (response) {
+                    console.log(response);
+                }
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
+
+        let loggedinuser = null;
+
+        //when user login
+        function load_loggedinuser() {
+            loggedinuser = JSON.parse(localStorage.getItem("loggedinuser"));
+            console.log(loggedinuser);
+            let dashboard = document.getElementById("dashboard_li");
+            let log_in = document.getElementById("login_btn");
+            let log_out = document.getElementById("logout_btn");
+
+            if (loggedinuser) {
+                dashboard.style.display = "block";
+                log_in.style.display = "none";
+                log_out.style.display = "block";
+                if (loggedinuser.Userole == 'member') {
+                    dashboard.innerHTML = `<a href="/profile">DASHBOARD</a>`
+                }
+                else {
+                    dashboard.innerHTML = `<a href="/Create_User">DASHBOARD</a>`
+                }
+            }
+            else {
+                dashboard.style.display = "none";
+                log_in.style.display = "block";
+                log_out.style.display = "none";
+            }
+        }
+
+        load_loggedinuser();
+
+        async function logout() {
+            console.log(loggedinuser.memberId);
+            try {
+                localStorage.removeItem("loggedinuser");
+                alert("Logged out successfully!");
+            }
+            catch (error) {
+                console.error('Error logging out:', error);
+            }
+            load_loggedinuser();
+        }
+
+    </script>
+
+    {{script}}
+
+</body>
+
+</html>

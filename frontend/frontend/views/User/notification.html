@@ -1,0 +1,83 @@
+<style>
+    section {
+        display: flex;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    .panel {
+        background-color: rgba(255, 255, 255, 0.6);
+        height: fit-content;
+        padding: 20px;
+        margin-top: 5rem;
+        border-radius: 5px;
+    }
+
+    .panel ul {
+        list-style-type: none;
+    }
+
+    .panel li {
+        padding: 10px;
+        margin: 10px;
+        background-color: rgb(221, 217, 211);
+        font-size: larger;
+        border-radius: 5px;
+        height: fit-content;
+    }
+
+    button {
+        background-color: #ff6600;
+        color: white;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 8px;
+    }
+</style>
+
+<section>
+    <div class="panel">
+        <h2 class="heading">Notifications</h2>
+        <ul id="notify_ul"></ul>
+
+    </div>
+</section>
+<script>
+
+    async function load_notification() {
+        let ul = document.getElementById("notify_ul");
+        ul.innerHTML = ``;
+        let notification = []
+        await fetch(`${notifications_url}/${loggedinuser.MemberId}`)
+            .then(response => response.json())
+            .then(array => {
+                notification.push(...array);
+            })
+        console.log(notification);
+
+        if (notification) {
+            notification.forEach(data => {
+                const li = document.createElement("li");
+                li.innerHTML = `<div>
+                                    <p>Your ${data.N_Type} request  has been ${data.N_Status} </p>
+                                    <button onclick="delete_notify('${data.N_Id}')">Clear</button>
+                                </div>`
+                ul.appendChild(li);
+            })
+        }
+        else {
+            ul.innerHTML = `You don't have any notificatios !`;
+        }
+    }
+    load_notification();
+
+    async function delete_notify(N_Id) {
+        console.log(N_Id);
+        delete_api(notifications_url,N_Id);
+        load_notification()
+    }
+
+</script>

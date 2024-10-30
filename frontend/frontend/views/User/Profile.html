@@ -1,0 +1,129 @@
+<style>
+    header {
+        margin: 30px;
+        color: antiquewhite;
+    }
+
+    .container {
+        margin: 50px auto;
+    }
+
+    #logged{
+        display: flex;
+    }
+
+    #img img {
+        height: 6rem;
+        width: 6rem;
+        border-radius: 50%;
+        margin:0px 20px;
+    }
+</style>
+
+<section>
+    <header>
+        <div id="logged"></div>
+    </header>
+
+    <div class="container">
+        <h2 class="heading">Edit User Profile</h2>
+        <div id="img">
+
+        </div>
+        <form id="profile-form">
+            <div class="form-group">
+                <label for="fullname">Full Name:</label>
+                <input type="text" id="fullname" name="fullname" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="phonenumber">Phone Number:</label>
+                <input type="text" id="phonenumber" name="phonenumber" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="nicnumber">NIC Number:</label>
+                <input type="text" id="nicnumber" name="nicnumber" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" readonly>
+            </div>
+
+            <button type="button" class="btn" id="edit-btn">Edit</button>
+            <button type="button" class="btn" id="save-btn">Save</button>
+        </form>
+    </div>
+</section>
+
+<script>
+
+    let logged = document.getElementById('logged')
+    logged.innerHTML = `<h1> Welcome ${loggedinuser.FullName.toUpperCase()}</h1>  `;
+ let img = document.getElementById('img')
+    img.innerHTML = ` <img src="http://localhost:5143/Resources/${loggedinuser.Memberimg}" alt="" > `;
+
+    let userData = [];
+    let nicnumber = document.getElementById('nicnumber');
+    let phonenumber = document.getElementById('phonenumber');
+
+    // Load user profile from members and populate the form
+    async function loadUserProfile() {
+        await fetch(`${members_url}`)
+            .then(response => response.json())
+            .then(array => {
+                members.push(...array);
+                console.log(members)
+            })
+
+        userData = members.find(x => x.MemberId == loggedinuser.MemberId)
+        console.log(userData);
+
+        if (userData) {
+            document.getElementById('fullname').value = userData.FullName;
+            phonenumber.value = userData.phoneNumber;
+            nicnumber.value = userData.NicNumber;
+            document.getElementById('username').value = userData.UserName;
+            document.getElementById('edit-btn').style.display = 'block';
+        }
+        else {
+            alert('User not found');
+        }
+        document.getElementById('save-btn').style.display = 'none';
+    }
+
+    // Handle click on edit button
+    document.getElementById('edit-btn').addEventListener('click', function () {
+        document.getElementById('phonenumber').removeAttribute('readonly');
+        document.getElementById('nicnumber').removeAttribute('readonly');
+        document.getElementById('edit-btn').style.display = 'none';
+        document.getElementById('save-btn').style.display = 'block';
+    });
+
+    // Handle save button click
+    document.getElementById('save-btn').addEventListener('click', function (event) {
+        event.preventDefault();
+
+        // Compare the initial data with the current form data to check if there are any changes
+        if (phonenumber.value == userData.PhoneNumber || nicnumber.value == userData.NicNumber) {
+            alert("no changes have been made");
+        }
+        else {
+             const arr = {
+                FullName: userData.FullName,
+                MemberId: userData.MemberId,
+                NicNumber: nicnumber.value,
+                phonenumber: phonenumber.value,
+                UserName: userData.UserName,
+            }
+            console.log(arr);
+            post_api(pendingEdits_url, arr);//to send request to change the details
+            alert("Your request has been sent to admin");
+        }
+        loadUserProfile()
+    });
+
+    // Load profile data on page load
+    loadUserProfile();
+</script>

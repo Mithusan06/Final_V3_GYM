@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.0/css/font-awesome.css"
+        integrity="sha512-72McA95q/YhjwmWFMGe8RI3aZIMCTJWPBbV8iQY3jy1z9+bi6+jHnERuNrDPo/WGYEzzNs4WdHNyyEr/yXJ9pA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+    </style>
+
+    <link rel="stylesheet" href="/static/css/common.css">
+
+    {{style}}
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div>
+            <h1>POWERGYM</h1>
+        </div>
+
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/Create_User">Create-Users</a></li>
+            <li><a href="/Fees">Fees</a></li>
+            <li><a href="/overdue">Payment-Overdues</a></li>
+            <li><a href="/Member-Requests">Members-Request</a></li>
+            <li><a href="/Member-Reports">Member-Reports</a></li>
+            <li><a href="/Payment-Reports">payment-Reports</a></li>
+            <li><a href="/Training-Reports">Training-Reports</a></li>
+            <li><button class="Logout" onclick="logout()">Logout</button></li>
+        </ul>
+    </aside>
+
+    <main> {{content}} </main>
+
+    <script>
+        const members_url = "http://localhost:5143/api/Member";
+        const payments_url = "http://localhost:5143/api/Payment";
+        const trainingPrograms_url = "http://localhost:5143/api/TrainingProgram";
+        const pendingEdits_url = "http://localhost:5143/api/Pendingeditsontroller";
+        const pendingProgramEdits_url = "http://localhost:5143/api/PendingProgram";
+        const notifications_url = "http://localhost:5143/api/Notification";
+
+        let members = [];
+        let payments = [];
+        let trainingPrograms = [];
+        let notifications = [];
+        let pending_payments = [];
+
+        const today = new Date(); // Get today's date
+        console.log(today);
+
+        async function post_api(url, arr) {
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(arr)
+                });
+                if (response) {
+                    console.log(response);
+                }
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function delete_api(url, id) {
+            try {
+                const response = await fetch(`${url}/${id}`, {
+                    method: "DELETE"
+                });
+                if (response) {
+                    console.log(response);
+                }
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function put_api(url, id, arr) {
+            try {
+                const response = await fetch(`${url}/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(arr)
+                })
+                if (response) {
+                    console.log(response);
+                }
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            await fetch(`${payments_url}/status/Pending`)
+                .then(response => response.json())
+                .then(array => {
+                    pending_payments.push(...array);
+                })
+            console.log(pending_payments);
+            /// to change the overdue payments
+            pending_payments.forEach(payment => {
+                const nextPaymentDate = new Date(payment.NextpaymentDate);
+                console.log(nextPaymentDate);
+
+                //  Check if payment is overdue
+                if (today > nextPaymentDate) {
+                    payment.status = 'Overdue';
+                    console.log(payment);
+                    put_api(payments_url, payment.id, payment);// change the status as overdue
+                }
+            })
+        })
+
+        async function logout() {
+            try {
+                localStorage.removeItem("loggedinuser");
+                location.href = "/"
+            }
+            catch (error) {
+                console.error('Error logging out:', error);
+            }
+        }
+
+    </script>
+
+    {{script}}
+
+</body>
+
+</html>
